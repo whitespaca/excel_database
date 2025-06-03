@@ -1,0 +1,2 @@
+[dependencies]
+excel_database = { path = "./" }

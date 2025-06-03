@@ -1,0 +1,13 @@
+[package]
+name = "excel_database"
+version = "0.1.0"
+edition = "2021"
+authors = ["whitespaca <whitespaca@outlook.com>"]
+description = "Manage Excel files like a database with simple CRUD operations."
+license = "MIT"
+repository = "https://github.com/whitespaca/excel_database"
+
+[dependencies]
+umya-spreadsheet = "0.6"
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "1.0"
