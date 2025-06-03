@@ -8,7 +8,8 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use umya_spreadsheet::{Cell, CellValue as UCellValue, reader, writer, Worksheet};
+use umya_spreadsheet::{Cell, CellValue as UCellValue, Worksheet};
+use umya_spreadsheet::{reader, writer};
 
 /// Represents a cell's value. Currently, only text is supported.
 /// You can extend this enum to include Number(f64), Bool(bool), Date(String), etc.
@@ -93,7 +94,7 @@ impl ExcelDatabase {
     /// - `NoHeaders(sheet_name)` if the sheet has no rows at all.
     fn load_data(file_path: &str, sheet_name: &str) -> Result<Vec<Row>, ExcelDbError> {
         // Open the workbook
-        let book = Reader::new().load_workbook(Path::new(file_path))?;
+        let mut book = reader::xlsx::read(Path::new(file_path))?;
         if !book.has_sheet(sheet_name) {
             return Err(ExcelDbError::SheetNotFound(sheet_name.to_string()));
         }
@@ -147,7 +148,7 @@ impl ExcelDatabase {
     /// - `SheetNotFound(sheet_name)` if the sheet cannot be found when writing.
     /// - I/O or spreadsheet errors if the underlying write fails.
     fn save_data(&self) -> Result<(), ExcelDbError> {
-        let mut book = Reader::new().load_workbook(Path::new(&self.file_path))?;
+        let mut book = reader::xlsx::read(Path::new(&self.file_path))?;
         if !book.has_sheet(&self.sheet_name) {
             return Err(ExcelDbError::SheetNotFound(self.sheet_name.clone()));
         }
@@ -159,7 +160,7 @@ impl ExcelDatabase {
         // If no rows are present, add an empty sheet
         if self.data.is_empty() {
             book.add_worksheet(&self.sheet_name, new_ws);
-            Writer::new(&book).save_as(Path::new(&self.file_path))?;
+            writer::xlsx::write(&book, Path::new(&self.file_path))?;
             return Ok(());
         }
 
@@ -188,7 +189,7 @@ impl ExcelDatabase {
 
         // Add the rebuilt sheet and save the file
         book.add_worksheet(&self.sheet_name, new_ws);
-        Writer::new(&book).save_as(Path::new(&self.file_path))?;
+        writer::xlsx::write(&book, Path::new(&self.file_path))?;
         Ok(())
     }
 
@@ -322,7 +323,7 @@ impl ExcelDatabase {
         new_sheet_name: &str,
         initial_data: Option<Vec<Row>>,
     ) -> Result<(), ExcelDbError> {
-        let mut book = Reader::new().load_workbook(Path::new(&self.file_path))?;
+        let mut book = reader::xlsx::read(Path::new(&self.file_path))?;
         if book.has_sheet(new_sheet_name) {
             return Err(ExcelDbError::SheetNotFound(new_sheet_name.to_string()));
         }
@@ -356,7 +357,7 @@ impl ExcelDatabase {
         }
 
         book.add_worksheet(new_sheet_name, ws);
-        Writer::new(&book).save_as(Path::new(&self.file_path))?;
+        writer::xlsx::write(&book, Path::new(&self.file_path))?;
         Ok(())
     }
 
@@ -366,7 +367,7 @@ impl ExcelDatabase {
     ///
     /// Propagates any I/O or spreadsheet parsing errors.
     pub fn is_sheet_exists(&self, sheet_name: &str) -> Result<bool, ExcelDbError> {
-        let book = Reader::new().load_workbook(Path::new(&self.file_path))?;
+        let book = reader::xlsx::read(Path::new(&self.file_path))?;
         Ok(book.has_sheet(sheet_name))
     }
 
@@ -376,7 +377,7 @@ impl ExcelDatabase {
     ///
     /// Propagates any I/O or spreadsheet parsing errors.
     pub fn get_all_sheet_names(&self) -> Result<Vec<String>, ExcelDbError> {
-        let book = Reader::new().load_workbook(Path::new(&self.file_path))?;
+        let book = reader::xlsx::read(Path::new(&self.file_path))?;
         Ok(book.get_sheet_names().to_vec())
     }
 
