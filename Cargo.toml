@@ -1,0 +1,9 @@
+[package]
+name = "excel_database"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+calamine = "0.24"
+serde_json = "1.0"
+umya-spreadsheet = "1.2"
